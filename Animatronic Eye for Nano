@@ -1,0 +1,326 @@
+#include <Arduino.h>
+#include <Servo.h>
+
+// ======================================
+// SERVOS
+// ======================================
+
+// EYELIDS
+Servo rightLid;     // D4
+Servo leftLid;      // D9
+
+// EYEBALL LEFT/RIGHT
+Servo rightEyeLR;   // D5
+Servo leftEyeLR;    // D10
+
+// EYEBALL UP/DOWN
+Servo rightEyeUD;   // D6
+Servo leftEyeUD;    // D11
+
+// ======================================
+// CURRENT POSITIONS
+// ======================================
+
+// Lids
+float rightLidPos = 90;
+float leftLidPos = 90;
+
+// Eyes Left/Right
+float rightEyeLRPos = 90;
+float leftEyeLRPos = 90;
+
+// Eyes Up/Down
+float rightEyeUDPos = 90;
+float leftEyeUDPos = 95;
+
+// ======================================
+// SPEEDS
+// ======================================
+
+int lidDelay = 2;
+int eyeDelay = 4;
+
+// ======================================
+// SETUP
+// ======================================
+
+void setup() {
+
+  // Attach servos
+  rightLid.attach(4);
+  leftLid.attach(9);
+
+  rightEyeLR.attach(5);
+  leftEyeLR.attach(10);
+
+  rightEyeUD.attach(6);
+  leftEyeUD.attach(11);
+
+  // Neutral positions
+  rightLid.write(90);
+  leftLid.write(90);
+
+  rightEyeLR.write(90);
+  leftEyeLR.write(90);
+
+  rightEyeUD.write(90);
+  leftEyeUD.write(95);
+
+  delay(2000);
+}
+
+// ======================================
+// MAIN LOOP
+// ======================================
+
+void loop() {
+
+  // ======================================
+  // NORMAL BLINK
+  // ======================================
+
+  blinkTogether();
+
+  // ======================================
+  // LOOK LEFT
+  // ======================================
+
+  moveEyesLRTogether(60, 55);
+  delay(700);
+
+  blinkQuick();
+
+  // ======================================
+  // CENTER
+  // ======================================
+
+  moveEyesLRTogether(90, 90);
+  delay(700);
+
+  // ======================================
+  // LOOK RIGHT
+  // ======================================
+
+  moveEyesLRTogether(145, 145);
+  delay(700);
+
+  blinkTogether();
+
+  // ======================================
+  // CENTER
+  // ======================================
+
+  moveEyesLRTogether(90, 90);
+  delay(700);
+
+  // ======================================
+  // LOOK UP
+  // SAFER VALUES
+  // WAS 135 / 110
+  // NOW 125 / 105
+  // ======================================
+
+  moveEyesUDTogether(125, 105);
+  delay(800);
+
+  blinkSlow();
+
+  // ======================================
+  // CENTER
+  // ======================================
+
+  moveEyesUDTogether(90, 95);
+  delay(700);
+
+  // ======================================
+  // LOOK DOWN
+  // SAFER VALUES
+  // WAS 78 / 80
+  // NOW 82 / 82
+  // ======================================
+
+  moveEyesUDTogether(82, 82);
+  delay(800);
+
+  blinkQuick();
+  delay(150);
+  blinkQuick();
+
+  // ======================================
+  // DIAGONAL LOOK
+  // ======================================
+
+  moveEyesLRTogether(145, 145);
+  moveEyesUDTogether(125, 105);
+  delay(900);
+
+  blinkTogether();
+
+  // ======================================
+  // RETURN CENTER
+  // ======================================
+
+  moveEyesLRTogether(90, 90);
+  moveEyesUDTogether(90, 95);
+  delay(1000);
+
+  // ======================================
+  // SLEEP SEQUENCE
+  // ======================================
+
+  closeEyesLong();
+  delay(1200);
+
+  openEyesSlow();
+  delay(1500);
+}
+
+// ======================================
+// PERFECT LID BLINK
+// ======================================
+
+void blinkTogether() {
+
+  moveLidsTogether(145, 55);
+  delay(180);
+
+  moveLidsTogether(90, 90);
+  delay(300);
+}
+
+// ======================================
+// QUICK BLINK
+// ======================================
+
+void blinkQuick() {
+
+  moveLidsTogether(145, 55);
+  delay(80);
+
+  moveLidsTogether(90, 90);
+  delay(120);
+}
+
+// ======================================
+// SLOW BLINK
+// ======================================
+
+void blinkSlow() {
+
+  moveLidsTogether(145, 55);
+  delay(500);
+
+  moveLidsTogether(90, 90);
+  delay(500);
+}
+
+// ======================================
+// CLOSE EYES LONG
+// ======================================
+
+void closeEyesLong() {
+
+  moveLidsTogether(145, 55);
+}
+
+// ======================================
+// OPEN EYES SLOW
+// ======================================
+
+void openEyesSlow() {
+
+  moveLidsTogether(90, 90);
+}
+
+// ======================================
+// SYNCHRONIZED LIDS
+// ======================================
+
+void moveLidsTogether(int targetRight, int targetLeft) {
+
+  targetRight = constrain(targetRight, 60, 145);
+  targetLeft  = constrain(targetLeft, 55, 145);
+
+  float startRight = rightLidPos;
+  float startLeft  = leftLidPos;
+
+  float distRight = targetRight - startRight;
+  float distLeft  = targetLeft  - startLeft;
+
+  int totalSteps = 40;
+
+  for (int i = 1; i <= totalSteps; i++) {
+
+    float p = (float)i / (float)totalSteps;
+
+    rightLidPos = startRight + (distRight * p);
+    leftLidPos  = startLeft  + (distLeft  * p);
+
+    rightLid.write(round(rightLidPos));
+    leftLid.write(round(leftLidPos));
+
+    delay(lidDelay);
+  }
+}
+
+// ======================================
+// LEFT / RIGHT EYE MOVEMENT
+// ======================================
+
+void moveEyesLRTogether(int targetRight, int targetLeft) {
+
+  targetRight = constrain(targetRight, 60, 145);
+  targetLeft  = constrain(targetLeft, 55, 145);
+
+  float startRight = rightEyeLRPos;
+  float startLeft  = leftEyeLRPos;
+
+  float distRight = targetRight - startRight;
+  float distLeft  = targetLeft  - startLeft;
+
+  int totalSteps = 40;
+
+  for (int i = 1; i <= totalSteps; i++) {
+
+    float p = (float)i / (float)totalSteps;
+
+    rightEyeLRPos = startRight + (distRight * p);
+    leftEyeLRPos  = startLeft  + (distLeft  * p);
+
+    rightEyeLR.write(round(rightEyeLRPos));
+    leftEyeLR.write(round(leftEyeLRPos));
+
+    delay(eyeDelay);
+  }
+}
+
+// ======================================
+// UP / DOWN EYE MOVEMENT
+// ======================================
+
+void moveEyesUDTogether(int targetRight, int targetLeft) {
+
+  targetRight = constrain(targetRight, 45, 135);
+  targetLeft  = constrain(targetLeft, 80, 110);
+
+  float startRight = rightEyeUDPos;
+  float startLeft  = leftEyeUDPos;
+
+  float distRight = targetRight - startRight;
+  float distLeft  = targetLeft  - startLeft;
+
+  int totalSteps = 40;
+
+  for (int i = 1; i <= totalSteps; i++) {
+
+    float p = (float)i / (float)totalSteps;
+
+    rightEyeUDPos = startRight + (distRight * p);
+    leftEyeUDPos  = startLeft  + (distLeft  * p);
+
+    rightEyeUD.write(round(rightEyeUDPos));
+    leftEyeUD.write(round(leftEyeUDPos));
+
+    delay(eyeDelay);
+  }
+}
